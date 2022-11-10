@@ -1,7 +1,14 @@
+import useWindowResize from '../../utils/hooks/useWindowResize';
 import styles from './GameBoard.module.scss';
 import GameCell from './GameCell';
 
 const GameBoard = () => {
+
+  const {
+    vpWidth,
+    vpHeight
+  } = useWindowResize();
+  
 
   const getCell = (index: number): JSX.Element  => {
     return (

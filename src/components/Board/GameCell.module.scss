@@ -2,8 +2,12 @@
 // https://www.freecodecamp.org/news/css-shapes-explained-how-to-draw-a-circle-triangle-and-more-using-pure-css/
 
 .cell {
-  width:200px;
-  height:200px;
+  // width:200px;
+  // height:200px;
+  width:100%;
+  height:100%;
+
+  
   background:lightblue;
   border-radius: 5%;
   position: relative;

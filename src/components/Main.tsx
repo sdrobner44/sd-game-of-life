@@ -1,8 +1,11 @@
 import GameBoard from './Board/GameBoard';
+import styles from './Main.module.scss';
 
 function Main() {
   return (
-    <GameBoard />
+    <article className={styles.article}>
+       <GameBoard />
+    </article>
   )
 }
 
