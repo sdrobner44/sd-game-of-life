@@ -1,4 +1,5 @@
 import ICell, { CellHealthStatusEn } from '../models/ICell';
+import getEmptyBoard from './getEmptyBoard';
 
 
 enum CellProcessingStateEn {
@@ -11,15 +12,16 @@ interface ICellProcessingState {
   y: number;
   state: CellProcessingStateEn;
   nOfNeis: number;
+  onlyNei: ICell;
 }
 
 const getBoardXSize = (board:Array<Array<ICell>>): number => {
   return board[0].length;
 }
 
-const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell | null> => {
+const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell> => {
 
-  const resultTemp = new Array<ICell | null>();
+  const resultTemp = new Array<ICell>();
 
   const x = cell.x;
   const y = cell.y;
@@ -31,7 +33,7 @@ const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell 
   // yNei = y - 1;
   // cellNei = yNei >= 0 ? 
 
-  const getRelevantCell = (xI: number, yI: number): ICell | null => {
+  const getRelevantCell = (xI: number, yI: number): ICell => {
     if(xI === x && yI === y){
       return null;
     }
@@ -66,7 +68,7 @@ const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell 
   return resultTemp.filter((x) => x != null);
 }
 
-const processCell = (cell: ICell, board: Array<Array<ICell>>): ICellProcessingState | null => {
+const processCell = (cell: ICell, board: Array<Array<ICell>>): ICellProcessingState => {
   const cellNei = getCellNeigbours(cell, board);
   // the reason it is an array is because 
   return {
@@ -74,14 +76,15 @@ const processCell = (cell: ICell, board: Array<Array<ICell>>): ICellProcessingSt
     y: cell.y,
     state: cellNei.length === 0? CellProcessingStateEn.noNei : CellProcessingStateEn.hasNei,
     nOfNeis: cellNei.length,
+    onlyNei: cellNei.length === 1 ? cellNei[0] : null,
   }
 }
 
 const calculateBoardUpdate = (board: Array<Array<ICell>>): Array<Array<ICell>> => {
-  const calcBoard: Array<Array<ICell>> = [];
+  const calcBoard: Array<Array<ICell>> = getEmptyBoard(getBoardXSize(board), board.length);
 
   // iterate through the board and determine if each cell has neigbours
-  const processingResult = new Array<ICellProcessingState | null>();
+  const processingResult = new Array<ICellProcessingState>();
   board.forEach((row: Array<ICell>) => {
      row.forEach((cell: ICell) => {
        if(cell.health !== CellHealthStatusEn.empty){
@@ -91,6 +94,16 @@ const calculateBoardUpdate = (board: Array<Array<ICell>>): Array<Array<ICell>> =
    }
   );
   
+  const deterioratingHealth = processingResult.filter((x) => x.nOfNeis !== 1);
+
+  deterioratingHealth.forEach((pCell) => {
+    const currentBCell = board[pCell.x][pCell.y];
+    const newBCell = calcBoard[pCell.x][pCell.y];
+    newBCell.health = currentBCell.health - 1;
+  });
+
+  const birthingPArents = processingResult.filter((x) => x.nOfNeis === 1);
+
   // use processingResult to apply it on the board
 
   return calcBoard;
