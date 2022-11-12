@@ -1,6 +1,7 @@
 import useWindowResize from '../utils/hooks/useWindowResize';
 import GameBoard from './Board/GameBoard';
 import styles from './Main.module.scss';
+import {BoardContextProvider} from '../common/BoardContext';
 
 function Main() {
 
@@ -18,9 +19,11 @@ function Main() {
   }
 
   return (
-    <article className={styles.article} style={dynamicStyle}>
-       <GameBoard xSize={10} ySize={10} />
-    </article>
+    <main className={styles.article} style={dynamicStyle}>
+      <BoardContextProvider>
+         <GameBoard xSize={10} ySize={10} />
+      </BoardContextProvider>
+    </main>
   )
 }
 
