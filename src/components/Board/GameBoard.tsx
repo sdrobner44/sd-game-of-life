@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import BoardContext from '../../common/BoardContext';
+import { getBoardXSize, getBoardYSize } from '../../common/calculateBoardUpdate';
 import ICell from '../../models/ICell';
 import styles from './GameBoard.module.scss';
 import GameCell from './GameCell';
@@ -15,8 +16,8 @@ const GameBoard = ({xSize, ySize}: IGameBoardProps) => {
 
   const board = ctx.board;
 
-  const boardX = board.length;
-  const boardY = board[0].length;
+  const boardX = getBoardXSize(board);
+  const boardY = getBoardYSize(board);
 
   const boardDynStyles = {
     gridTemplateColumns: `repeat(${boardX}, 1fr)`,
@@ -29,9 +30,13 @@ const GameBoard = ({xSize, ySize}: IGameBoardProps) => {
   //   )
   // }
 
+  const onBoardChange = (cell: ICell): void => {
+    ctx.updateCells([cell]);
+  }
+
   const getCell = (cell: ICell): JSX.Element  => {
     return (
-      <GameCell key={`${cell.x}_${cell.y}`} cell={cell}/>
+      <GameCell key={`${cell.x}_${cell.y}`} cell={cell} onBoardChange={onBoardChange}/>
     )
   }
 

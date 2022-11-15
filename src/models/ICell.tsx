@@ -1,8 +1,9 @@
 enum CellHealthStatusEn {
   empty = 0,
   dead = 1,
-  slightlySick = 2,
-  healthy = 3,
+  sick = 2,
+  slightlySick = 3,
+  healthy = 4,
 }
 
 interface ICell {

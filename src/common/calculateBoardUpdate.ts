@@ -15,8 +15,14 @@ interface ICellProcessingState {
   onlyNei: ICell;
 }
 
-const getBoardXSize = (board:Array<Array<ICell>>): number => {
-  return board[0].length;
+export const getBoardXSize = (board:Array<Array<ICell>>): number => {
+  const bSize = board && board.length > 0 ? board[0].length : 0
+  return bSize;
+}
+
+export const getBoardYSize = (board:Array<Array<ICell>>): number => {
+  const bSize = board ? board.length : 0
+  return bSize;
 }
 
 const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell> => {

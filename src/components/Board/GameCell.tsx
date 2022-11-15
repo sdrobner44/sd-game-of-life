@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import ICell from '../../models/ICell';
+import ICell, { CellHealthStatusEn } from '../../models/ICell';
 import styles from './GameCell.module.scss';
 
 type GameCellProps = {
   // index: number,
-  cell: ICell
+  cell: ICell,
+  onBoardChange: (cell: ICell) => void,
 };
 
 // https://www.quackit.com/css/css_color_codes.cfm
@@ -14,26 +15,35 @@ interface IDynamicCellStyle {
   background: string;
 }
 
-const GameCell = ({cell}: GameCellProps) => {
+const GameCell = ({cell, onBoardChange}: GameCellProps) => {
 
-  const healthyCellColor = '#006400';
-  const aLittleSickCellColor = '#8FBC8F';
-  const sickCellColor = '#8A2BE2';
-  const emptyCellColor = '#B0C4DE';
+  const colorsMap = new Map<CellHealthStatusEn, string>([
+    [CellHealthStatusEn.healthy, '#006400'],
+    [CellHealthStatusEn.slightlySick, '#8FBC8F'],
+    [CellHealthStatusEn.sick, '#8A2BE2'],
+    [CellHealthStatusEn.dead, '#D0D0D0'],
+    [CellHealthStatusEn.empty, '#B0C4DE'],    
+   ]
+  );
   
   const initialCircleStyle = {
-    background: emptyCellColor
+    background: colorsMap.get(cell.health),
   }
   const [circleStyles, setCircleStyles] = useState<IDynamicCellStyle>(initialCircleStyle);
 
   const handleClick = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     // console.log(`The link was clicked for ${index}.`);
-    setCircleStyles(
-      {
-        background: healthyCellColor
-      }
-    );
+    // setCircleStyles(
+    //   {
+    //     background: colorsMap.get(CellHealthStatusEn.healthy),
+    //   }
+    // );
+    onBoardChange({
+      x: cell.x,
+      y: cell.y,
+      health: CellHealthStatusEn.healthy,
+    });
   }
 
   return (
