@@ -1,5 +1,6 @@
 import ICell, { CellHealthStatusEn } from '../models/ICell';
 import getEmptyBoard from './getEmptyBoard';
+import iDimension from './IDimension';
 
 
 enum CellProcessingStateEn {
@@ -76,12 +77,16 @@ export const getBoardYSize = (board:Array<Array<ICell>>): number => {
 
 // ----------------------------------------------------
 
-const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell> => {
+const getCellNeigbours = (cell: ICell, 
+                          changedCellsMap: Map<string, ICell>,
+                          boardDimention: iDimension): Array<ICell> => {
 
   const resultTemp = new Array<ICell>();
 
-  const x = cell.x;
-  const y = cell.y;
+  const xCell = cell.x;
+  const yCell = cell.y;
+
+  const {x: sizeX, y: sizeY} = boardDimention;
 
   // let cellNei: ICell = null;
 
@@ -90,37 +95,32 @@ const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell>
   // yNei = y - 1;
   // cellNei = yNei >= 0 ? 
 
-  const getRelevantCell = (xI: number, yI: number): ICell => {
-    if(xI === x && yI === y){
-      return null;
-    }
-    if(xI < 0 || xI >= getBoardXSize(board)){
-      return null;
-    }
+  // get valid neighb. indexes
+  const ranges = [-1, 0, 1];
 
-    if(yI < 0 || yI >= board.length){
-      return null;
-    }    
+  const getValidNeiKey = (xP: number, yP: number): string | null => {
 
-    const cell = board[xI][yI];
-    if(cell.health === CellHealthStatusEn.empty){
-      return null;
-    }
+    if(xP < 0) return null;
+    if(xP > sizeX - 1) return null;
 
-    return cell;
+    if(yP < 0) return null;
+    if(yP > sizeY - 1) return null;
+
+    if(xP === xCell && yP === yCell) return null;
+
+    return `${xP}-${yP}`;
   }
 
-  const delta: Array<number> = [-1, 0, 1]
-
-  delta.forEach((xI) => {
-    delta.forEach((yI) => {
-      const xNei = x + xI;
-      const yNei = y + yI;
-      resultTemp.push(getRelevantCell(xNei, yNei));
-     }
-    )
-   }
-  )
+  ranges.forEach((xI) => {
+    ranges.forEach((yI) => {
+      const cX = xCell + xI;
+      const cY = yCell + yI;
+      const key = getValidNeiKey(cX, cY);
+      if(key && changedCellsMap.has(key)){
+        resultTemp.push(changedCellsMap.get(key));
+      }
+    });
+  });
 
   return resultTemp.filter((x) => x != null);
 }
@@ -128,8 +128,10 @@ const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell>
 // ----------------------------------------------
 
 
-const processCell = (cell: ICell, board: Array<Array<ICell>>): ICellProcessingState => {
-  const cellNei = getCellNeigbours(cell, board);
+const processCell = (cell: ICell, 
+                      changedCellsMap: Map<string, ICell>,
+                      boardDimention: iDimension): ICellProcessingState => {
+  const cellNei = getCellNeigbours(cell, changedCellsMap, boardDimention);
   // the reason it is an array is because 
   return {
     x: cell.x,
@@ -169,19 +171,24 @@ const processCell = (cell: ICell, board: Array<Array<ICell>>): ICellProcessingSt
 //   return calcBoard;
 // }
 
-const calculateBoardUpdate = (changedCells: Array<ICell>): Array<ICell> => {
+const calculateBoardUpdate = (changedCells: Array<ICell>, boardDimention: iDimension): Array<ICell> => {
+
+  const changedCellsMap = new Map<string, ICell>();
+
+  changedCells.forEach((cell) => {
+    changedCellsMap.set(`${cell.x}-${cell.y}`, cell);
+  });
+
+
+  const processingResult = new Array<ICellProcessingState>();
+  changedCells.forEach((cell) => {
+    processingResult.push(processCell(cell, changedCellsMap, boardDimention));
+  });
 
   // iterate through the board and determine if each cell has neigbours
-  const processingResult = new Array<ICellProcessingState>();
-  board.forEach((row: Array<ICell>) => {
-     row.forEach((cell: ICell) => {
-       if(cell.health !== CellHealthStatusEn.empty){
-         processingResult.push(processCell(cell, board));
-       }
-     })
-   }
-  );
-  
+
+  const calculatedCells = [...changedCells];
+
   const deterioratingHealth = processingResult.filter((x) => x.nOfNeis !== 1);
 
   deterioratingHealth.forEach((pCell) => {
