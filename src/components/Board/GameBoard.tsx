@@ -45,8 +45,16 @@ const GameBoard = ({xSize, ySize}: IGameBoardProps) => {
     [],
   );
 
+  const triggerManualStep = () => ctx.triggerManualStep();
+
   return (
     // <div className={styles.container}>
+    <>
+      <header>
+        <button onClick={triggerManualStep}>
+          Triger manual step
+        </button>
+      </header>
       <div className={styles.board} style={boardDynStyles}>
         {/* {[...Array(xSize * ySize)].map((x, i) =>
           getCell(i)
@@ -56,6 +64,7 @@ const GameBoard = ({xSize, ySize}: IGameBoardProps) => {
         )}
       {/* </div> */}
     </div>
+    </>    
   )
 }
 

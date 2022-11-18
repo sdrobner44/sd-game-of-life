@@ -16,6 +16,8 @@ const BoardContext = createContext({
   updateBoardSize: (x: number, y: number): void => {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function  
   updateCells: (cells: Array<ICell>): void => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function    
+  triggerManualStep: (): void => {},
 });
 
 // interface iDimension {
@@ -27,8 +29,8 @@ export const BoardContextProvider = (props: { children: any; }) => {
   const [dummy, setDummy] = useState(false)
   const [board, setBoard] = useState(emptyBoard);
   const [dimentions, setDimensions] = useState<iDimension>({x:5, y:5});
-
-  let updatedCellsBuffer: Array<ICell> = [];
+  const [changedCells, setChangedCells] = useState(new Array<ICell>());
+  const [toggleStepTrigger, setToggleStepTrigger] = useState<boolean>(false);
 
   const recalculateBoard = () => {
     console.log('recalculating board');
@@ -45,16 +47,17 @@ export const BoardContextProvider = (props: { children: any; }) => {
     
     const resizedBoard = copyAndResizeBoard(board);
 
-    const calcBoard = calculateBoardUpdate(resizedBoard);
+    // const updatedCellsTEmp = updatedCellsBuffer;
+    // setUpdatedCellsBuffer([]);
 
-    const updatedCellsTEmp = [...updatedCellsBuffer];
-    updatedCellsBuffer = [];
+    // updatedCellsTEmp.forEach((cell) => {
+    //   resizedBoard[cell.x][cell.y].health = cell.health;
+    // })
 
-    updatedCellsTEmp.forEach((cell) => {
-      calcBoard[cell.x][cell.y].health = cell.health;
-    })
-
-    setBoard(calcBoard);
+    // const calcBoard = calculateBoardUpdate(resizedBoard);
+    
+    // setBoard(calcBoard);
+    setBoard(resizedBoard);
   }
 
   // useEffect(() => {
@@ -72,13 +75,15 @@ export const BoardContextProvider = (props: { children: any; }) => {
   // }, [dimentions]);
 
   useEffect(() => {
-    const boardRecalcInterval = setInterval(recalculateBoard, 2000)
+    // const boardRecalcInterval = setInterval(recalculateBoard, 2000)
 
-    return ()=> {
-      clearInterval(boardRecalcInterval);
-    };
+    // return ()=> {
+    //   // clearInterval(boardRecalcInterval);
+    // };
 
-  }, [dimentions]);
+    recalculateBoard();
+
+  }, [dimentions, toggleStepTrigger]);
 
   const updateBoardSize = (x: number, y: number): void => {
     try {
@@ -90,25 +95,28 @@ export const BoardContextProvider = (props: { children: any; }) => {
 
   const updateCells = (cells: Array<ICell>): void => {
     try {
-      // const newBoard = getEmptyBoard(dimentions.x, dimentions.y);
-      // cells.forEach((cell) => {
-      //   newBoard[cell.x][cell.y].health = cell.health;
-      // })
-      // setBoard(newBoard);
+      // console.log('updateCells', cells, updatedCellsBuffer);
+
+      setChangedCells((previous) => [...previous, ...cells]);
+
+      const newBoard = getEmptyBoard(dimentions.x, dimentions.y);
+
+      changedCells.forEach((cell) => {
+        newBoard[cell.y][cell.x].health = cell.health;
+      })
+
+      setBoard(newBoard);
   
-      updatedCellsBuffer = [...updatedCellsBuffer, ...cells];
     } catch (ex) {
       console.log('BoardContextProvider -> updateCells', ex);
     }    
   }
-
-
-    // sdDebounce(fn: func, arg: string, delay: number) 
-
+  // sdDebounce(fn: func, arg: string, delay: number) 
   const contextVal = {dummy,
     board,
     updateBoardSize,
-    updateCells
+    updateCells,
+    triggerManualStep: () => setToggleStepTrigger((previous) => !previous),
   };
 
   const provider = <BoardContext.Provider value={contextVal}>

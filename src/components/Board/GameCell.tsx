@@ -29,7 +29,7 @@ const GameCell = ({cell, onBoardChange}: GameCellProps) => {
   const initialCircleStyle = {
     background: colorsMap.get(cell.health),
   }
-  const [circleStyles, setCircleStyles] = useState<IDynamicCellStyle>(initialCircleStyle);
+  // const [circleStyles, setCircleStyles] = useState<IDynamicCellStyle>(initialCircleStyle);
 
   const handleClick = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
@@ -48,7 +48,7 @@ const GameCell = ({cell, onBoardChange}: GameCellProps) => {
 
   return (
     <div className={styles.cell} onClick={handleClick}>
-       <div className={[styles.element, styles.circle].join(' ')} style={circleStyles}></div>
+       <div className={[styles.element, styles.circle].join(' ')} style={initialCircleStyle}></div>
     </div>
   )
 }
