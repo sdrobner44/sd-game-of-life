@@ -1,6 +1,6 @@
 import ICell, { CellHealthStatusEn } from '../models/ICell';
 import getEmptyBoard from './getEmptyBoard';
-import iDimension from './IDimension';
+import iDimension, { getCellKey } from './IDimension';
 
 
 enum CellProcessingStateEn {
@@ -8,7 +8,7 @@ enum CellProcessingStateEn {
   hasNei = 2,
 }
 
-interface ICellProcessingState {
+interface ICellProcessingState extends iDimension {
   x: number;
   y: number;
   state: CellProcessingStateEn;
@@ -25,6 +25,7 @@ export const getBoardYSize = (board:Array<Array<ICell>>): number => {
   const bSize = board ? board.length : 0
   return bSize;
 }
+
 
 // const getCellNeigbours = (cell: ICell, board: Array<Array<ICell>>): Array<ICell> => {
 
@@ -171,37 +172,31 @@ const processCell = (cell: ICell,
 //   return calcBoard;
 // }
 
-const calculateBoardUpdate = (changedCells: Array<ICell>, boardDimention: iDimension): Array<ICell> => {
+const calculateBoardUpdate = (changedCellsMapP: Map<string, ICell>, boardDimention: iDimension): Map<string, ICell> => {
 
-  const changedCellsMap = new Map<string, ICell>();
-
-  changedCells.forEach((cell) => {
-    changedCellsMap.set(`${cell.x}-${cell.y}`, cell);
-  });
-
+  const changedCellsMap = new Map(changedCellsMapP);
 
   const processingResult = new Array<ICellProcessingState>();
-  changedCells.forEach((cell) => {
+  Array.from(changedCellsMap.values()).forEach((cell) => {
     processingResult.push(processCell(cell, changedCellsMap, boardDimention));
   });
 
   // iterate through the board and determine if each cell has neigbours
 
-  const calculatedCells = [...changedCells];
+  // const calculatedCells = [...changedCells];
 
   const deterioratingHealth = processingResult.filter((x) => x.nOfNeis !== 1);
 
   deterioratingHealth.forEach((pCell) => {
-    const currentBCell = board[pCell.x][pCell.y];
-    const newBCell = calcBoard[pCell.x][pCell.y];
-    newBCell.health = currentBCell.health - 1;
+    const cellIter = changedCellsMap.get(getCellKey(pCell))
+    cellIter.health = cellIter.health - 1;
   });
 
   const birthingPArents = processingResult.filter((x) => x.nOfNeis === 1);
 
   // use processingResult to apply it on the board
 
-  return calcBoard;
+  return changedCellsMap;
 }
 
 export default calculateBoardUpdate;

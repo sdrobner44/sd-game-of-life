@@ -3,7 +3,7 @@ import ICell, { createCell } from '../models/ICell';
 import calculateBoardUpdate, { getBoardXSize } from './calculateBoardUpdate';
 import copyAndResizeBoard from './copyAndResizeBoard';
 import getEmptyBoard from './getEmptyBoard';
-import iDimension from './IDimension';
+import iDimension, { getCellKey } from './IDimension';
 
 // const emptyBoard: ICell[][] = [[]];
 const emptyBoard: ICell[][] = [];
@@ -29,7 +29,8 @@ export const BoardContextProvider = (props: { children: any; }) => {
   const [dummy, setDummy] = useState(false)
   const [board, setBoard] = useState(emptyBoard);
   const [dimentions, setDimensions] = useState<iDimension>({x:5, y:5});
-  const [changedCells, setChangedCells] = useState(new Array<ICell>());
+  // const [changedCells, setChangedCells] = useState(new Array<ICell>());
+  const [changedCellsMap, setChangedCellsMap] = useState(new Map<string, ICell>());
   const [toggleStepTrigger, setToggleStepTrigger] = useState<boolean>(false);
 
   const recalculateBoard = () => {
@@ -54,11 +55,23 @@ export const BoardContextProvider = (props: { children: any; }) => {
     //   resizedBoard[cell.x][cell.y].health = cell.health;
     // })
 
+    const recalsCells = calculateBoardUpdate(changedCellsMap, dimentions)
+
+    const applyUpdatedCells = () => {
+      recalsCells.forEach((cellIter) => {
+        resizedBoard[cellIter.x][cellIter.y].health = cellIter.health;
+      });
+    }
+  
+    applyUpdatedCells();
+
     // const calcBoard = calculateBoardUpdate(resizedBoard);
     
     // setBoard(calcBoard);
     setBoard(resizedBoard);
   }
+
+  
 
   // useEffect(() => {
   //   const boardRecalcInterval = setInterval(recalculateBoard, 2000)
@@ -97,16 +110,19 @@ export const BoardContextProvider = (props: { children: any; }) => {
     try {
       // console.log('updateCells', cells, updatedCellsBuffer);
 
-      setChangedCells((previous) => [...previous, ...cells]);
+      const newMap = new Map(changedCellsMap);
+      cells.forEach((cellIter) => {
+        newMap.set(getCellKey(cellIter), cellIter);  
+      });
 
       const newBoard = getEmptyBoard(dimentions.x, dimentions.y);
-
-      changedCells.forEach((cell) => {
-        newBoard[cell.y][cell.x].health = cell.health;
+      Array.from(newMap.values()).forEach((cellIter) => {
+        newBoard[cellIter.y][cellIter.x].health = cellIter.health;
       })
 
+      setChangedCellsMap(newMap);
+
       setBoard(newBoard);
-  
     } catch (ex) {
       console.log('BoardContextProvider -> updateCells', ex);
     }    

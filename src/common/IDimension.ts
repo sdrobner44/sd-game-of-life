@@ -3,4 +3,6 @@ interface iDimension {
   y: number;  
 }
 
+export const getCellKey = (dim: iDimension) => `${dim.x}-${dim.y}`
+
 export default iDimension;
