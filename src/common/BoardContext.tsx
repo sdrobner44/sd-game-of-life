@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState } from 'react';
 import ICell, { createCell } from '../models/ICell';
-import calculateBoardUpdate, { getBoardXSize } from './calculateBoardUpdate';
+import calculateBoardUpdate, { getBoardXSize, getBoardYSize } from './calculateBoardUpdate';
 import copyAndResizeBoard from './copyAndResizeBoard';
 import getEmptyBoard from './getEmptyBoard';
 import iDimension, { getCellKey } from './IDimension';
@@ -37,16 +37,18 @@ export const BoardContextProvider = (props: { children: any; }) => {
     console.log('recalculating board');
 
     // was the board was ever initialized ?
-    if(board.length === 0){
-      setBoard(getEmptyBoard(dimentions.x, dimentions.y));
+    if(getBoardYSize(board) === 0){
+      setBoard(getEmptyBoard(dimentions));
       return;
     }
 
     // was the dimention changed?
-    const deltaX: number = dimentions.x - getBoardXSize(board);
-    const deltaY: number = dimentions.y - board.length;
+    // const deltaX: number = dimentions.x - getBoardXSize(board);
+    // const deltaY: number = dimentions.y - getBoardYSize(board);
     
-    const resizedBoard = copyAndResizeBoard(board);
+    // const resizedBoard = copyAndResizeBoard(board);
+    const resizedBoard = getEmptyBoard(dimentions);
+
 
     // const updatedCellsTEmp = updatedCellsBuffer;
     // setUpdatedCellsBuffer([]);
@@ -57,18 +59,19 @@ export const BoardContextProvider = (props: { children: any; }) => {
 
     const recalsCells = calculateBoardUpdate(changedCellsMap, dimentions)
 
-    const applyUpdatedCells = () => {
-      recalsCells.forEach((cellIter) => {
-        resizedBoard[cellIter.x][cellIter.y].health = cellIter.health;
-      });
-    }
+    // const applyUpdatedCells = () => {
+    //   recalsCells.forEach((cellIter) => {
+    //     resizedBoard[cellIter.x][cellIter.y].health = cellIter.health;
+    //   });
+    // }
   
-    applyUpdatedCells();
+    // applyUpdatedCells();
 
-    // const calcBoard = calculateBoardUpdate(resizedBoard);
+    // // const calcBoard = calculateBoardUpdate(resizedBoard);
     
-    // setBoard(calcBoard);
-    setBoard(resizedBoard);
+    // // setBoard(calcBoard);
+    // setBoard(resizedBoard);
+    updateCells(Array.from(recalsCells.values()), false);
   }
 
   
@@ -106,16 +109,18 @@ export const BoardContextProvider = (props: { children: any; }) => {
     }    
   }
 
-  const updateCells = (cells: Array<ICell>): void => {
+  const updateCells = (cells: Array<ICell>, incremental = true): void => {
     try {
-      // console.log('updateCells', cells, updatedCellsBuffer);
-
-      const newMap = new Map(changedCellsMap);
+      let newMap = new Map();
+      if(incremental){
+        newMap = new Map(changedCellsMap);
+      }
+      
       cells.forEach((cellIter) => {
         newMap.set(getCellKey(cellIter), cellIter);  
       });
 
-      const newBoard = getEmptyBoard(dimentions.x, dimentions.y);
+      const newBoard = getEmptyBoard(dimentions);
       Array.from(newMap.values()).forEach((cellIter) => {
         newBoard[cellIter.y][cellIter.x].health = cellIter.health;
       })

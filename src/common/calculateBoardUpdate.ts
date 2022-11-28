@@ -172,6 +172,79 @@ const processCell = (cell: ICell,
 //   return calcBoard;
 // }
 
+const getChildPosition = (cellProcessing: ICellProcessingState, boardDimension: iDimension): iDimension => {
+
+  const isVertical = cellProcessing.y !== cellProcessing.onlyNei.y;
+
+  const cells = [cellProcessing, cellProcessing.onlyNei];
+
+  if(isVertical) {
+    let topIndex = -1;
+  
+    topIndex = cellProcessing.y < cellProcessing.onlyNei.y ? 0 : 1;
+    const bottomIndex = topIndex === 1 ? 0 : 1;
+
+    // is one above another
+    if(cells[topIndex].x === cells[bottomIndex].x){
+      // for now we will try to give birth with teh preference to the right
+      // in the futire we might randomize teh side
+      
+      // can we do it to the right?
+      if(cells[bottomIndex].x <= boardDimension.x - 2){
+        const newCellDimension = {
+          x: cells[bottomIndex].x + 1,
+          y: cells[bottomIndex].y,
+        }
+        return newCellDimension;
+      } else {
+        const newCellDimension = {
+          x: cells[bottomIndex].x - 1,
+          y: cells[bottomIndex].y,
+        }        
+        return newCellDimension;
+      }
+    }
+
+    // since we got here the cell are diagonal
+    // is the botton cell on the left?
+    if(cells[bottomIndex].x < cells[topIndex].x){
+      const newCellDimension = {
+        x: cells[bottomIndex].x + 1,
+        y: cells[bottomIndex].y,
+      }        
+      return newCellDimension;
+    }
+
+    // if we are here - the bottom cell is to teh tight
+    const newCellDimension = {
+      x: cells[bottomIndex].x - 1,
+      y: cells[bottomIndex].y,
+    }        
+    return newCellDimension;
+  }  // if(isVertical) {
+
+  // if we are here - the cells are horizontal
+  // determine teh right cell and drop a chils
+  // either under if there is space or above otherwise
+  
+  const rightCellIndex = cells[0].x > cells[1].x ? 0 : 1;
+  if(cells[rightCellIndex].y < (boardDimension.y - 1)){
+    const newCellDimension = {
+      x: cells[rightCellIndex].x,
+      y: cells[rightCellIndex].y + 1,
+    }        
+    return newCellDimension;
+  }
+
+  {
+    const newCellDimension = {
+      x: cells[rightCellIndex].x,
+      y: cells[rightCellIndex].y - 1,
+    }        
+    return newCellDimension;
+  }
+}
+
 const calculateBoardUpdate = (changedCellsMapP: Map<string, ICell>, boardDimention: iDimension): Map<string, ICell> => {
 
   const changedCellsMap = new Map(changedCellsMapP);
@@ -190,9 +263,35 @@ const calculateBoardUpdate = (changedCellsMapP: Map<string, ICell>, boardDimenti
   deterioratingHealth.forEach((pCell) => {
     const cellIter = changedCellsMap.get(getCellKey(pCell))
     cellIter.health = cellIter.health - 1;
+    if(cellIter.health <= CellHealthStatusEn.empty){
+      changedCellsMap.delete(getCellKey(pCell));
+    }
   });
 
-  const birthingPArents = processingResult.filter((x) => x.nOfNeis === 1);
+  const birthingParents = processingResult.filter((x) => x.nOfNeis === 1);
+  const processingPotentialParents = new Array<ICellProcessingState>();
+
+  // divide the list into couples
+  const couplesTemp = new Set();
+  birthingParents.forEach((cellIter => {
+    if(!couplesTemp.has(getCellKey(cellIter))){
+      processingPotentialParents.push(cellIter);
+    } else {
+      couplesTemp.add(getCellKey(cellIter));
+      couplesTemp.add(getCellKey(cellIter.onlyNei));
+    }
+  }));
+
+  processingPotentialParents.forEach((cellIter) => {
+    const babyCell = getChildPosition(cellIter, boardDimention);
+    changedCellsMap.set(getCellKey(babyCell), {
+      x: babyCell.x,
+      y: babyCell.y,
+      health: CellHealthStatusEn.healthy
+    });
+  });
+ // getChildPosition
+
 
   // use processingResult to apply it on the board
 
